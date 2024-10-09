@@ -4,6 +4,7 @@
 import itertools
 import numpy as np
 import sys
+import argparse
 
 
 def calculate_score(src_word, matching_word):
@@ -19,14 +20,15 @@ def calculate_score(src_word, matching_word):
 
 def main():
 
-    # Parse -g flag
-    gaps = False
-    if sys.argv[-1] == '-g':
-        print("Allowing gaps")
-        gaps = True
+    # Command line arg parsing
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-g', action='store_true')
+    parser.add_argument('src', type=str)
+    args = parser.parse_args()
 
-    # Ask user for Source sequence
-    src = input("SOURCE: ")
+    # Assign arguments
+    gaps = args.g
+    src = args.src
 
     # Create words
     w = 3
@@ -81,12 +83,14 @@ def main():
                 # Index of src_word in source
                 query_index = src.find(src_word)
 
+                # Define padded variables
+                padded_seq = len(src) * '-' + seq + len(src) * '-'
+                db_sequence_index = db_sequence_index + len(src)
+                padded_src = (db_sequence_index - query_index) * ' ' + src
+                padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(src)]
+
                 # If no gaps
                 if not gaps:
-                    padded_seq = len(src) * ' ' + seq + len(src) * ' '
-                    db_sequence_index = db_sequence_index + len(src)
-                    padded_src = (db_sequence_index - query_index) * ' ' + src
-                    padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(src)]
 
                     score = calculate_score(src, padded_seq_slice)
 
@@ -104,16 +108,21 @@ def main():
 
                     # Extend alignment right
                     query_right, db_sequence_right = query_index + w, db_sequence_index + w
+                    run = 0
                     while(query_right < len(src) and db_sequence_right < len(seq)):
+                        print(run)
+                        run += 1
+                        breakpoint()
 
                         # Compare extension
-                        if src[query_right] == seq[db_sequence_right]:
+                        if padded_src[query_right] == padded_seq[db_sequence_right]:
                             score += 5
                             query_right += 1
                             db_sequence_right += 1
                             src_word += src[query_right]
 
                         else:
+                            gapped_right = src_word
                             # gaps here?
                             break
 
@@ -129,6 +138,7 @@ def main():
                             src_word = src[query_left] + src_word
 
                         else:
+                            gapped_left = src_word
                             # gaps here?
                             break
 
@@ -138,8 +148,8 @@ def main():
                         VERY_BEST['score'] = score
                         VERY_BEST['db_sequence'] = seq
                         VERY_BEST['src_index'] = db_sequence_left
-    breakpoint()
-    # print(VERY_BEST)
+    print(VERY_BEST["src"])
+    print(VERY_BEST["db_sequence"])
 
 
 

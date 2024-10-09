@@ -42,7 +42,7 @@ def main():
             scored_words[i][j] = score
 
     # Take only the matching_words that align best with src_words
-    p = 0.1
+    p = 0.3
     indices = (scored_words > 0).sum(axis=1).argsort()[::-1][:int(len(matching_words) * p)]
 
     # Store top matching words along with corresponding src words with positive score
@@ -138,7 +138,8 @@ def main():
                         VERY_BEST['score'] = score
                         VERY_BEST['db_sequence'] = seq
                         VERY_BEST['src_index'] = db_sequence_left
-        breakpoint()
+    breakpoint()
+    # print(VERY_BEST)
 
 
 

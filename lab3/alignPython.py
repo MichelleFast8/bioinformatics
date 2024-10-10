@@ -148,9 +148,31 @@ def main():
                         VERY_BEST['score'] = score
                         VERY_BEST['db_sequence'] = seq
                         VERY_BEST['src_index'] = db_sequence_left
-    print(VERY_BEST["src"])
-    print(VERY_BEST["db_sequence"])
+    print_results(src, VERY_BEST)
 
+
+def print_results(src, result):
+
+    # Print source word
+    print("SOURCE:", src)
+
+    # Print score
+    print("Highest score:", result['score'])
+
+    # Print line ID
+    print("Best match line:", result['seq_id'])
+
+    # Create matching bars
+    matching_markers = ""
+    for i, seq_char in enumerate(result['db_sequence']):
+        if i < len(result['src']) and seq_char == result['src'][i]:
+            matching_markers += "|"
+        else:
+            matching_markers += " "
+
+    print(result['src'])
+    print(matching_markers)
+    print(result['db_sequence'].replace("-", " "))
 
 
 if __name__ == "__main__":

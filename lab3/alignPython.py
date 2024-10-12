@@ -102,7 +102,6 @@ def main():
                         VERY_BEST['seq_id'] = entry_id
 
                 else:
-
                     # Score alignment
                     score = calculate_score(match[1][i], match[0])
 
@@ -116,6 +115,9 @@ def main():
 
                         # Compare extension
                         if padded_src[query_right] == padded_seq[db_sequence_right]:
+                            '''
+                            I think query right is the index of the src not the padded_src
+                            '''
                             score += 5
                             query_right += 1
                             db_sequence_right += 1

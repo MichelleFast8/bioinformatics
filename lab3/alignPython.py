@@ -9,10 +9,12 @@ import argparse
 
 def calculate_score(src_word, matching_word):
     score = 0
-    match, mismatch = 5, -3
+    match, mismatch, gap = 5, -3, -3
     for (a, b) in zip(src_word, matching_word):
         if (a==b):
             score += match
+        elif a == '.':
+            score += gap
         else:
             score += mismatch
     return score
@@ -103,57 +105,76 @@ def main():
 
                 else:
                     # Score alignment
-                    score = calculate_score(match[1][i], match[0])
+                    score = calculate_score(src, padded_seq_slice)
+                    #score = calculate_score(match[1][i], match[0])
 
                     # Extend alignment right
                     query_right, db_sequence_right = query_index + w, db_sequence_index + w
                     run = 0
                     while(query_right < len(src) and db_sequence_right < len(seq)):
-                        print(run)
-                        run += 1
-                        breakpoint()
 
                         # Compare extension
-                        if padded_src[query_right] == padded_seq[db_sequence_right]:
-                            '''
-                            I think query right is the index of the src not the padded_src
-                            '''
+                        if src[query_right] == padded_seq[db_sequence_right]:
                             score += 5
-                            query_right += 1
                             db_sequence_right += 1
                             src_word += src[query_right]
+                            query_right += 1
 
                         else:
-                            gapped_right = src_word
-                            # gaps here?
+                            for extend in range(0,11):
+                                extended_src = src[:query_right] + extend * "." + src[query_right:]
+                                padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(extended_src)]
+                                score = calculate_score(extended_src, padded_seq_slice)
+
+                                # Update overall best match
+                                if score >= VERY_BEST['score']:
+                                    VERY_BEST['score'] = score
+                                    VERY_BEST['db_sequence'] = padded_seq
+                                    VERY_BEST['src'] = padded_src
+                                    VERY_BEST['seq_id'] = entry_id
+
                             break
+
 
                     # Extend alignment left
                     query_left, db_sequence_left = query_index - 1, db_sequence_index - 1
                     while(query_left > 0 and db_sequence_left > 0):
+                        breakpoint()
 
                         # Compare extension
-                        if src_word[query_left] == seq[db_sequence_left]:
-                            score += 5
-                            query_left -= 1
-                            db_sequence_left -= 1
-                            src_word = src[query_left] + src_word
+                        try:
+                            if src[query_left] == padded_seq[db_sequence_left]:
+                                score += 5
+                                db_sequence_left = db_sequence_left - 1
+                                src_word = src[query_left] + src_word
+                                query_left -= 1
 
-                        else:
-                            gapped_left = src_word
-                            # gaps here?
-                            break
+                            else:
+                                gapped_left = src_word
+                                # gaps here?
+                                break
+                        except:
+                            breakpoint()
+
+                        # Update overall best match
+                        if score >= VERY_BEST['score']:
+                            VERY_BEST['score'] = score
+                            VERY_BEST['db_sequence'] = padded_seq
+                            VERY_BEST['src'] = padded_src
+                            VERY_BEST['seq_id'] = entry_id
 
 
                     # Update overall best match
                     if score >= VERY_BEST['score']:
                         VERY_BEST['score'] = score
-                        VERY_BEST['db_sequence'] = seq
-                        VERY_BEST['src_index'] = db_sequence_left
+                        VERY_BEST['db_sequence'] = padded_seq
+                        VERY_BEST['src'] = padded_src
+                        VERY_BEST['seq_id'] = entry_id
     print_results(src, VERY_BEST)
 
 
 def print_results(src, result):
+    breakpoint()
 
     # Print source word
     print("SOURCE:", src)

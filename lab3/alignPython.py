@@ -126,7 +126,10 @@ def main():
                         # Compare extension: introduce gap if mismatch
                         else:
 
-                            for extend in range(1,11):
+                            # Determine maximum gaps that is net positive effect
+                            max_gaps = min(10, (len(src) - src_end_match) * 5 // 3)
+
+                            for extend in range(1, max(2, max_gaps)):
                                 extended_src = src[:src_end_match] + extend * "+" + src[src_end_match:] # Introduce gaps to the right of matching word
                                 padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(extended_src)] # Grab aligned portion of sequence
                                 score = calculate_score(extended_src, padded_seq_slice)
@@ -154,7 +157,11 @@ def main():
                             src_start_match -= 1
 
                         else:
-                            for extend in range(1,11):
+
+                            # Determine maximum gaps that is net positive effect
+                            max_gaps = min(10, (src_start_match) * 5 // 3)
+
+                            for extend in range(1, max(2, max_gaps)):
                                 extended_src = src[:src_start_match+1] + extend * "+" + src[src_start_match+1:] # Introduce gaps to left of matching word
                                 padded_seq_slice = padded_seq[db_sequence_index - query_index - extend: db_sequence_index - query_index - extend + len(extended_src)] # Grab aligned portion of sequence
                                 score = calculate_score(extended_src, padded_seq_slice)

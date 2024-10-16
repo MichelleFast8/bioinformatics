@@ -8,6 +8,9 @@ import argparse
 
 
 def calculate_score(src_word, matching_word):
+    '''
+    matching_word is the slice of padded_seq that aligns with src_word
+    '''
     score = 0
     match, mismatch, gap = 5, -3, -3
     for (a, b) in zip(src_word, matching_word):
@@ -28,7 +31,6 @@ def main():
     parser.add_argument('src', type=str)
     args = parser.parse_args()
 
-    # Assign arguments
     gaps = args.g
     src = args.src
 
@@ -56,7 +58,6 @@ def main():
         s_words = np.take(src_words, [idx for idx, score in enumerate(scored_words[index]) if score > 0])
         top_matches.append((m_word, s_words))
 
-    # Compare to database!
     VERY_BEST = {
             "seq_id": "",
             "db_sequence": "",
@@ -91,85 +92,94 @@ def main():
                 padded_src = (db_sequence_index - query_index) * ' ' + src
                 padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(src)]
 
-                # If no gaps
-                if not gaps:
+                '''
+                Align src with sequence where the src_word and matching word line up
+                '''
+                score = calculate_score(src, padded_seq_slice)
 
-                    score = calculate_score(src, padded_seq_slice)
+                # Update overall best match
+                if score >= VERY_BEST['score']:
+                    VERY_BEST['score'] = score
+                    VERY_BEST['db_sequence'] = padded_seq
+                    VERY_BEST['src'] = padded_src
+                    VERY_BEST['seq_id'] = entry_id
 
-                    # Update overall best match
-                    if score >= VERY_BEST['score']:
-                        VERY_BEST['score'] = score
-                        VERY_BEST['db_sequence'] = padded_seq
-                        VERY_BEST['src'] = padded_src
-                        VERY_BEST['seq_id'] = entry_id
 
-                else:
-                    # Score alignment
-                    score = calculate_score(src, padded_seq_slice)
-                    #score = calculate_score(match[1][i], match[0])
+                ''' Introduce Gaps '''
+                if (gaps):
 
                     # Extend alignment right
-                    query_right, db_sequence_right = query_index + w, db_sequence_index + w
-                    run = 0
-                    while(query_right < len(src) and db_sequence_right < len(seq)):
+                    src_end_match = query_index + w
+                    seq_end_match = db_sequence_index + w
+                    while(src_end_match < len(src) and seq_end_match < len(seq)):
 
-                        # Compare extension
-                        if src[query_right] == padded_seq[db_sequence_right]:
+                        # Compare extension: take next base if matches
+                        if src[src_end_match] == padded_seq[seq_end_match]:
                             score += 5
-                            db_sequence_right += 1
-                            src_word += src[query_right]
-                            query_right += 1
+                            src_word += src[src_end_match]
+                            seq_end_match += 1
+                            src_end_match += 1
 
+                        # Compare extension: introduce gap if mismatch
                         else:
+
                             for extend in range(0,11):
-                                extended_src = src[:query_right] + extend * "." + src[query_right:]
-                                padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(extended_src)]
+                                extended_src = src[:src_end_match] + extend * "+" + src[src_end_match:] # Introduce gaps to the right of matching word
+                                padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(extended_src)] # Grab aligned portion of sequence
                                 score = calculate_score(extended_src, padded_seq_slice)
 
                                 # Update overall best match
                                 if score >= VERY_BEST['score']:
                                     VERY_BEST['score'] = score
                                     VERY_BEST['db_sequence'] = padded_seq
-                                    VERY_BEST['src'] = padded_src
+                                    VERY_BEST['src'] = extended_src
                                     VERY_BEST['seq_id'] = entry_id
 
-                            break
-
-
-                    # Extend alignment left
-                    query_left, db_sequence_left = query_index - 1, db_sequence_index - 1
-                    while(query_left > 0 and db_sequence_left > 0):
-                        breakpoint()
-
-                        # Compare extension
-                        try:
-                            if src[query_left] == padded_seq[db_sequence_left]:
-                                score += 5
-                                db_sequence_left = db_sequence_left - 1
-                                src_word = src[query_left] + src_word
-                                query_left -= 1
-
-                            else:
-                                gapped_left = src_word
-                                # gaps here?
-                                break
-                        except:
-                            breakpoint()
-
-                        # Update overall best match
-                        if score >= VERY_BEST['score']:
-                            VERY_BEST['score'] = score
-                            VERY_BEST['db_sequence'] = padded_seq
-                            VERY_BEST['src'] = padded_src
-                            VERY_BEST['seq_id'] = entry_id
-
-
-                    # Update overall best match
+                    # Found better match by extending right?
                     if score >= VERY_BEST['score']:
                         VERY_BEST['score'] = score
                         VERY_BEST['db_sequence'] = padded_seq
                         VERY_BEST['src'] = padded_src
                         VERY_BEST['seq_id'] = entry_id
+
+
+                    # Extend alignment left
+                    src_start_match = query_index - 1
+                    seq_start_match = db_sequence_index - 1
+                    run = 0
+                    while(src_start_match > 0 and seq_start_match > 0):
+                        run += 1
+
+                        # Compare extension
+                        try:
+                            if src[src_start_match] == padded_seq[seq_start_match]:
+                                score += 5
+                                src_word = src[src_start_match] + src_word
+                                seq_start_match -= 1
+                                print(seq_start_match)
+
+                            else:
+                                for extend in range(0,11):
+                                    extended_src = src[:src_start_match] + extend * "+" + src[src_start_match:] # Introduce gaps to left of matching word
+                                    padded_seq_slice = padded_seq[db_sequence_index - query_index: db_sequence_index - query_index + len(extended_src)] # Grab aligned portion of sequence
+                                    score = calculate_score(extended_src, padded_seq_slice)
+
+                                    # Update overall best match
+                                    if score >= VERY_BEST['score']:
+                                        VERY_BEST['score'] = score
+                                        VERY_BEST['db_sequence'] = padded_seq
+                                        VERY_BEST['src'] = padded_src
+                                        VERY_BEST['seq_id'] = entry_id
+                        except:
+                            breakpoint()
+
+                    # Found better match by extending left?
+                    if score >= VERY_BEST['score']:
+                        VERY_BEST['score'] = score
+                        VERY_BEST['db_sequence'] = padded_seq
+                        VERY_BEST['src'] = padded_src
+                        VERY_BEST['seq_id'] = entry_id
+
     print_results(src, VERY_BEST)
 
 

@@ -135,7 +135,7 @@ def main():
                                 if score >= VERY_BEST['score']:
                                     VERY_BEST['score'] = score
                                     VERY_BEST['db_sequence'] = padded_seq
-                                    VERY_BEST['src'] = (db_sequence_index - query_index)*' ' + extended_src
+                                    VERY_BEST['src'] = ((db_sequence_index - query_index)*' ' + extended_src).replace('+', ' ')
                                     VERY_BEST['seq_id'] = entry_id
 
                             break

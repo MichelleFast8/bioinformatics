@@ -2,10 +2,9 @@
 # Bioinformatics Lab 3
 
 import itertools
-import numpy as np
+import math
 import sys
 import argparse
-from tqdm import tqdm
 
 
 def calculate_score(src_word, matching_word):
@@ -41,8 +40,10 @@ def main():
     matching_words = list(itertools.product("ATCG", repeat=w))
     matching_words = ["".join(word) for word in matching_words]
 
+
+
     # Compare each src word to all matching words, store in matrix
-    scored_words = np.zeros((len(matching_words), len(src_words))) # Rows = matching words, Cols = src words
+    scored_words = [[0] * len(src_words) for _ in range(len(matching_words))]
     for j, src_word in enumerate(src_words):
         for i, matching_word in enumerate(matching_words):
             score = calculate_score(src_word, matching_word)
@@ -50,24 +51,28 @@ def main():
 
     # Take only the matching_words that align best with src_words
     p = 0.2
-    indices = (scored_words > 0).sum(axis=1).argsort()[::-1][:int(len(matching_words) * p)]
+    indices = sorted(
+        range(len(scored_words)),
+        key=lambda i: sum(score > 0 for score in scored_words[i]),
+        reverse=True
+    )[:int(len(matching_words) * p)]
 
     # Store top matching words along with corresponding src words with positive score
     top_matches = []
     for index in indices:
         m_word = matching_words[index]
-        s_words = np.take(src_words, [idx for idx, score in enumerate(scored_words[index]) if score > 0])
+        s_words = [src_words[idx] for idx, score in enumerate(scored_words[index]) if score > 0]
         top_matches.append((m_word, s_words))
 
     VERY_BEST = {
             "seq_id": "",
             "db_sequence": "",
             "src": "",
-            "score": -np.inf,
+            "score": -math.inf,
             }
 
     db = open("seq.txt")
-    for line in tqdm(db):
+    for line in db:
 
         # Clean up database entry
         entry_id = line.split(" ")[0]

@@ -16,12 +16,10 @@ def main():
     if (len(structID)!=4 and structID not in ['5con', '5coo', '5cop', '4hla', '5bry', '5bs4', '4hdp', '5dgw', '3cyw']):
         print("Invalid structID")
         return
-    
+
     # Run bash script if pdbFiles folder does not exist
     if os.path.isdir('pdbFiles') is False:
         subprocess.call("./fetch_pdb.sh")
-
-    breakpoint()
 
     # Open PDB File
     pdbFileChars = open(f"pdbFiles/{structID}.cif", "r")
@@ -48,35 +46,45 @@ def main():
         d) the O,C,N, or P atom specified as the 3rd cla fits in each of the sep distances output by the prog
     '''
     pdbFile = open(f"pdbFiles/{structID}.cif", "r")
-    pdbFile = pdbFile.readline()
+    pdbFile = pdbFile.readlines()
     df = pd.DataFrame(columns=["type", "atomNum", "elementId", "ligandId", "x", "y", "z"])
+
+    hetatms = []
+    atoms = []
+
     for newline in pdbFile:
-        line = newline.split(" ")
-        new_row = {"type",
-                   "atomNum",
-                   "elementId",
-                   "ligandId",
-                   "x",
-                   "y",
-                   "z"}
+        line = newline.split()
+        new_row = {"type":None,
+                   "atomNum":None,
+                   "elementId":None,
+                   "ligandId":None,
+                   "x":None,
+                   "y":None,
+                   "z":None}
+
         if ("HETATM" in newline):
-            breakpoint()
             new_row["type"] = "HETATM"
-            new_row["ligandId"] = line[21:24]
-        elif (line[:4]=="ATOM"):
+            new_row["ligandId"] = line[5]
+        elif (line[0]=="ATOM"):
             new_row["type"]="ATOM"
         else:
             continue
-        new_row["atomNum"] = line[7:11]
-        new_row["elementId"] = line[12]
-        new_row["x"] = line[34:41]
-        new_row["y"] = line[42:48]
-        new_row["z"] = line[49:56]
 
+        new_row["atomNum"] = line[1]
+        new_row["elementId"] = line[2][0]
+        new_row["x"] = line[10]
+        new_row["y"] = line[11]
+        new_row["z"] = line[12]
 
+        # Store HETATMs with specified ligandID
+        if (new_row['ligandId'] == ligandID):
+            hetatms.append(new_row)
 
+        # Store ATOMs
+        if (new_row['type'] == 'ATOM'):
+            atoms.append(new_row)
 
-
+    breakpoint()
 
 
 

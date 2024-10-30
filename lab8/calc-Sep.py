@@ -1,7 +1,16 @@
 import sys
+import stat
+import math
 import pandas as pd
 import os
 import subprocess
+
+RADII = {
+        "O": 0.48,
+        "C": 0.67,
+        "N": 0.56,
+        "P": 0.98
+        }
 
 def main():
     # cl args:
@@ -19,6 +28,7 @@ def main():
 
     # Run bash script if pdbFiles folder does not exist
     if os.path.isdir('pdbFiles') is False:
+        os.chmod('./fetch_pdb.sh', os.stat('./fetch_pdb.sh').st_mode | stat.S_IEXEC)
         subprocess.call("./fetch_pdb.sh")
 
     # Open PDB File
@@ -26,7 +36,7 @@ def main():
     pdbFileChars = pdbFileChars.read()
 
     # Check if ligand in pdb file
-    ligandStr = f"{ligandID}{4%len(ligandID) * ' '}non-polymer"
+    ligandStr = f"{ligandID}{(4-len(ligandID)) * ' '}non-polymer"
     if (ligandStr not in pdbFileChars):
         print("Ligand not found in pdbFile")
         return
@@ -72,9 +82,9 @@ def main():
 
         new_row["atomNum"] = line[1]
         new_row["elementId"] = line[2][0]
-        new_row["x"] = line[10]
-        new_row["y"] = line[11]
-        new_row["z"] = line[12]
+        new_row["x"] = float(line[10])
+        new_row["y"] = float(line[11])
+        new_row["z"] = float(line[12])
 
         # Store HETATMs with specified ligandID
         if (new_row['ligandId'] == ligandID):
@@ -84,11 +94,20 @@ def main():
         if (new_row['type'] == 'ATOM'):
             atoms.append(new_row)
 
-    breakpoint()
 
+    # Calculate distances between all HETATMs and ATOMS
+    distances = []
+    for hetatm in hetatms:
+        for atom in atoms:
+            distance = round(math.sqrt(((hetatm['y'] - atom['y'])**2 + (hetatm['y'] - atom['y'])**2 + (hetatm['z'] - atom['z'])**2)), 2)
+            fitness = f"{element} doesn't fit" if RADII[element] > distance else f"{element} fits"
+            string = f"HETATM {hetatm['atomNum']} {hetatm['elementId']} {hetatm['ligandId']}, ATOM {atom['atomNum']} {atom['elementId']} {structID} separated by {distance}A, {fitness}"
+            distances.append((distance, string))
 
-
-
+    # Take top 10
+    distances.sort(key=lambda x: x[0])
+    for dist in distances[:10]:
+        print(dist[1])
 
 
 if __name__=="__main__":

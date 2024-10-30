@@ -1,0 +1,8 @@
+set term png
+set output 'flapCatSitePlot.png'
+set xrange[0:9]
+set xlabel 'Structure'
+set ylabel 'Separation Distance (Angstrom)'
+set title 'Flap-Catalytic Site Separation Distance, 8 HIV-1 Protease Variants
+set xtics ('5con' 1,'5coo' 2,'5cop' 3,'4hla' 4,'5bry' 5,'5bs4' 6,'4hdp' 7,'5dgw' 8,'5dgw' 8)
+plot 'gnuplotData.txt' using 1:2 with lines title 'sep distance'

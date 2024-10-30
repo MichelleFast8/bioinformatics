@@ -1,5 +1,7 @@
 import sys
 import pandas as pd
+import os
+import subprocess
 
 def main():
     # cl args:
@@ -14,6 +16,12 @@ def main():
     if (len(structID)!=4 and structID not in ['5con', '5coo', '5cop', '4hla', '5bry', '5bs4', '4hdp', '5dgw', '3cyw']):
         print("Invalid structID")
         return
+    
+    # Run bash script if pdbFiles folder does not exist
+    if os.path.isdir('pdbFiles') is False:
+        subprocess.call("./fetch_pdb.sh")
+
+    breakpoint()
 
     # Open PDB File
     pdbFileChars = open(f"pdbFiles/{structID}.cif", "r")

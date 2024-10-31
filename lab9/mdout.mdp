@@ -1,31 +1,31 @@
 ;
 ;	File 'mdout.mdp' was generated
-;	By user: fastm2 (391219)
-;	On host: cf165-21
-;	At date: Tue Oct 29 11:58:23 2024
+;	By user: mitanih (431277)
+;	On host: linux-01
+;	At date: Thu Oct 31 10:43:21 2024
 ;
 ;	Created by:
 ;	             :-) GROMACS - gmx grompp, 2022.5-Debian_2022.5_2 (-:
 ;	
 ;	Executable:   /usr/bin/gmx
 ;	Data prefix:  /usr
-;	Working dir:  /home/fastm2/Documents/classes/597K/bioinformatics/lab9
+;	Working dir:  /home/mitanih/Documents/CSCI597K/bioinformatics/lab9
 ;	Command line:
-;	  gmx grompp -f lab9_npt.mdp -c lab9_nvt.gro -t lab9_nvt.cpt -p topol.top -o lab9_npt.tpr -r lab9_nvt.gro -maxwarn 200
+;	  gmx grompp -f lab9_md.mdp -c lab9_npt.gro -t lab9_npt.cpt -p topol -o md_0_1.tpr -maxwarn 2000
 
 ; VARIOUS PREPROCESSING OPTIONS
 ; Preprocessor information: use cpp syntax.
 ; e.g.: -I/home/joe/doe -I/home/mary/roe
 include                  = 
 ; e.g.: -DPOSRES -DFLEXIBLE (note these variable names are case sensitive)
-define                   = -DPOSRES
+define                   = 
 
 ; RUN CONTROL PARAMETERS
 integrator               = md
 ; Start time and timestep in ps
 tinit                    = 0
 dt                       = 0.002
-nsteps                   = 5000
+nsteps                   = 15000
 ; For exact run continuation or redoing part of a run
 init-step                = 0
 ; Part index is updated automatically on checkpointing (keeps files separate)
@@ -69,12 +69,12 @@ nstlog                   = 500
 nstcalcenergy            = 100
 nstenergy                = 500
 ; Output frequency and precision for .xtc file
-nstxout-compressed       = 0
+nstxout-compressed       = 500
 compressed-x-precision   = 1000
 ; This selects the subset of atoms for the compressed
 ; trajectory file. You can select multiple groups. By
 ; default, all atoms will be written.
-compressed-x-grps        = 
+compressed-x-grps        = System
 ; Selection of energy groups
 energygrps               = 
 
@@ -149,7 +149,7 @@ tau_p                    = 2.0
 compressibility          = 4.5e-5
 ref_p                    = 1.0
 ; Scaling of reference coordinates, No, All or COM
-refcoord_scaling         = com
+refcoord-scaling         = No
 
 ; OPTIONS FOR QMMM calculations
 QMMM                     = no
@@ -169,7 +169,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen_vel                  = no
 gen-temp                 = 300
-gen-seed                 = -344998083
+gen-seed                 = -68157441
 
 ; OPTIONS FOR BONDS    
 constraints              = all-bonds

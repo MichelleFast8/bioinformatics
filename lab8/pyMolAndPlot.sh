@@ -1,3 +1,5 @@
+# Michelle Fast, Stella Brown, Hidemi Mitani Shen
+
 #!/bin/bash
 echo "hello world"
 

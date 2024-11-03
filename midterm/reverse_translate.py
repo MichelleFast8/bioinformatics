@@ -1,4 +1,12 @@
 import sys
+from itertools import product
+
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
+RESET = "\033[0m"
+COLORS = [RED, GREEN, YELLOW, BLUE]
 
 def acid_to_codon(acid):
     codons = {
@@ -31,15 +39,48 @@ def acid_to_codon(acid):
     else:
         return codons[acid]
 
+'''
+Find all possible DNA sequences that could have sourced this polypeptide
+'''
 def main():	
     polypep_seq = list(sys.argv[1])
 
-    # Retrieve and store each acid's associated codons
-    for i in range(len(polypep_seq)):
-        polypep_seq[i] = (polypep_seq[i], acid_to_codon(polypep_seq[i]))
+    # Retrieve and store each acid's associated codons, in order
+    codon_lists = [acid_to_codon(acid) for acid in polypep_seq]
 
-    print(polypep_seq)
+    # Calculate all possible DNA sequences
+    dna_seqs = ["".join(codons) for codons in product(*codon_lists)]
+    
+    # Print Results
+    print(f"Number of DNA Sequences: {len(dna_seqs)}")
+    print("Polypeptide: ", end="")
+    pretty_print(polypep_seq, False)
+    for seq in dna_seqs:
+        pretty_print(seq, True)
 	
+
+'''
+Print codons in same color as corresponding acid
+'''
+def pretty_print(seq, is_dna):
+    if (is_dna):
+        split_seq = [seq[i:i+3] for i in range(0, len(seq), 3)]
+        i=0
+        for codon in split_seq:
+            if i >= len(COLORS):
+                i = 0
+            print(f"{COLORS[i]}{codon}", end="")
+            i = i+1
+        print()
+    else:
+        i=0
+        for acid in seq:
+            if i >= len(COLORS):
+                i = 0
+            print(f"{COLORS[i]}{acid}", end="")
+            i += 1
+        print()
+
 
 if __name__=="__main__":
 	main()
